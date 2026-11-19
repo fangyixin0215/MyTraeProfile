@@ -1,0 +1,51 @@
+- Communication language: Chinese
+- Code review: prefers逐行加注释 (line-by-line comments) for code analysis
+- Code optimization: expects direct modifications to不合理 (unreasonable) or 需要优化 (needing optimization) code
+- Debugging: prefers simplified logging interfaces (e.g., direct UART write instead of complex formatting)
+- Code naming: variables should have clear, relevant names (e.g., SN-related variables should include 'sn' instead of 'mac')
+- UI design: prefers美观 (aesthetic) and 简洁 (concise) interfaces
+- Code modifications: must preserve original comments; deletions of comments are unacceptable
+- AI interaction: prefers干脆利落 (decisive and efficient) responses without unnecessary铺垫
+- AI workflow: expects immediate action (e.g., code modification followed by compilation) without prompting
+- AI output: prefers direct results with minimal explanation
+- Problem resolution: values accuracy and efficiency to avoid wasting time and积分 (points)
+- Documentation: requires high-quality, clear flowcharts with properly aligned arrows and lines
+- Image quality: demands clear, high-resolution diagrams suitable for formal delivery
+- Design control: prefers to manually adjust diagrams (e.g., SVG files) to ensure quality
+- Bug tracking: prefers not to record duplicate/common-type bugs; merge into existing entries with notes instead
+- Bug tracking: requires bug descriptions to accurately reflect specific data (e.g., scores, text, button names) from provided screenshots
+- Documentation versioning: version numbers must be reflected in filenames (e.g., MS90_PRD_V1.1)
+- Code contribution: prefers to manually commit changes with provided commit lists and descriptions to avoid conflicts
+- Commit organization: when asked for a commit list, subdivide commits by distinct purpose/intent — group changes of different purposes into separate commits (not one big commit), to keep each commit focused and reviewable; if two purposes are intertwined in the same hunk and cannot be cleanly separated, combine them in one commit and clearly state both purposes in the message
+- Protocol documentation: version numbers must be updated whenever new features are added; old versions must be retained, new versions must include an update record table listing changes from the previous version
+- Code naming: all project symbols prefixed with `ob3_` must be renamed to use the `od_` prefix consistently
+- Documentation: requires modification records and functional summaries for project changes, both stored as markdown files
+- 未来将有多个基于FR801xHA芯片+ML307x（4G Cat.1模组）的类似组合项目，均会沿用当前OB3的OTA流程实现，仅OTA下发URL可能有小幅变化
+- 【富芮坤Freqchip平台SDK硬性约束】co_printf不支持%u格式符（打印为空字符串），所有无符号值打印必须用%d并强转(int)（固件<240KB不会溢出）；已多次踩坑（OTA进度、work/rest秒数打点均因此显示为空），任何Freqchip平台（FR801xHA等）代码写log时严禁出现%u
+- 【源文件编码管理规范（用户实测教训）】历史项目文件可能GBK/UTF-8混杂，Source Insight等工具切换encoding/revert encoding会把GBK中文注释有损转成U+FFFD"锟斤拷"（曾造成proj_main.c大面积乱码+换行被吞代码行粘连）；修改任何文件前先确认其实际编码并严格按原编码读写：GBK文件用PowerShell显式GBK编码的ReadAllText/WriteAllText字符串替换（勿整文件重写），UTF-8文件可正常编辑；AI新建文件统一UTF-8；proj_main.c已于2026-10-18由用户在Source Insight中转存UTF-8显示正常
+- 编译要求：所有Keil固件编译必须使用全量编译，禁止增量编译，避免固件编译时间戳不更新导致调试浪费时间
+- 产物输出要求：编译完成后必须提供可直接点击的文件链接，避免用户手动复制粘贴路径
+- Commit操作：仅执行git add和git commit，push操作由用户自行决定完成
+- 固件改动后只需Keil编译，hex/bin更新即交付，无需合成whole.hex，用户自行处理
+- Commit message类型前缀使用约定式规范（fix/feat），其余正文使用中文
+- 所有项目所有打印格式化符一律禁用%u，无符号值必须用%d并强转int，写代码/审查时主动遵守
+- 所有项目只要串口log是打开的，开机必须打印编译时间：LOG_INFO(tag, "build time: %s %s\r\n", __DATE__, __TIME__)；写新工程/审查时主动检查
+- 偏好记录 (2026-11-08)
+  - 嵌入式/硬件底层代码(Flash/Cache/中断/链接布局等)只信任人工逐条复核; 用户认为部分模型改硬件底层代码能力不足, 重要改动要求反汇编/map级验证。
+  - 项目: FR801xHA+ML307x OTA, Keil MDK。
+  - 中文MD文档不生成PDF(此前生成中文PDF乱码); 用户用workbuddy自行根据MD更新PDF。
+- 对RFID无源标签的物理工作原理有学习需求，希望结合当前YF108项目的13.56MHz ISO14443A/MIFARE卡场景讲解相关物理机制
+- Commit 流程 (2026-11-11): 每次 git commit 前必须先给用户提交方案（commit 清单/拆分），用户确认后才允许执行提交，禁止直接提交
+- OTA 触发规则：收到 OTA 指令后固定延迟 8 秒执行，移除随机延迟
+- OTA 日志降噪：下载过程中省略 HTTP 包原始内容打印，仅保留当前包号、升级百分比进度，避免日志冲刷干扰进度观察
+- 【看门狗硬性规则（2026-11-17 用户强调：任何项目都要加，是任何！！）】所有项目的固件都必须启用硬件看门狗，新建工程和接手现有工程时主动检查并接入，禁止等用户提醒；接入要求：超时时间大于系统最长阻塞窗口，且在主循环和所有阻塞式等待（AT等待/下载循环/flash操作等）的轮询路径里喂狗；用宏控制便于调试期关闭
+- 分工约定：MTK 工程由用户负责编译验证，AI 仅负责代码修改，改完后直接说明预期现象和验证要点
+- 波特率要求：OTA 过程中禁止修改波特率，必须保持 115200 不变
+- 明确表示不使用TRAE工具
+- 【代码注释规范（2026-11-19 用户强调）】代码注释只描述函数/变量/宏常量的实际作用和用途，保持专业、可读，供同事阅读；严禁把与用户的对话内容、会话过程、修改缘由的聊天式描述写进注释；如需记录"为何修改/改了什么"，写进提交说明（commit message）或单独的修改记录文档，不放进代码注释
+- UI设计：偏好浅色医疗风，贴合口腔护理品类，要求多套设计方案对比挑选，中文标注清晰无锯齿
+- 硬件测试模式相关修改必须完全不影响量产代码，仅在测试模式下生效，量产模式下所有改动逻辑与原代码完全等价
+## 协作偏好（2026-11-18）
+- 只有用户明确说'提交/commit'时才执行 git commit；交付类文档（给同事参考的清单等）默认只生成文件，不主动入库
+- push 一律用户自己处理，助手只 commit 不 push
+- Keil 编译: C:\Keil_v5\UV4\UV4.exe -b <uvproj> -j0 -o <log>，验证标准 0 Error 0 Warning（双配置）
